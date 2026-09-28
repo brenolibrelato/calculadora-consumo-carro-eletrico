@@ -20,27 +20,6 @@ Os dados ficam no [Supabase](https://supabase.com) (Postgres). Qualquer pessoa c
 - [Chart.js](https://www.chartjs.org/) para o gráfico
 - GitHub Pages para a hospedagem
 
-## Configuração
-
-### 1. Supabase
-1. Crie um projeto em [supabase.com](https://supabase.com) (plano gratuito).
-2. Em **SQL Editor**, rode o conteúdo de [`supabase/schema.sql`](supabase/schema.sql), **trocando `seu-email@exemplo.com`** pelo(s) e-mail(s) que podem lançar leituras.
-3. Em **Authentication → URL Configuration**, coloque a URL do GitHub Pages em *Site URL* e em *Redirect URLs* (ex.: `https://brenolibrelato.github.io/calculadora-consumo-carro-eletrico/`).
-4. Em **Project Settings → API**, copie a *Project URL* e a *anon public key* para [`js/config.js`](js/config.js).
-
-A anon key pode ficar pública no front. Quem protege os dados são as políticas de RLS do `schema.sql`.
-
-### 2. GitHub Pages
-**Settings → Pages → Source: Deploy from a branch → `main` / `(root)`**.
-
-### Rodar localmente
-ES modules não funcionam via `file://`, então use um servidor local:
-```bash
-python3 -m http.server 8000
-# abra http://localhost:8000
-```
-Para o login funcionar localmente, adicione `http://localhost:8000` em *Redirect URLs* no Supabase.
-
 ## Backup
 
 O botão **Exportar CSV** baixa todas as leituras (separador `;`, abre direto no Excel).
