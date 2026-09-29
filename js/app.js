@@ -81,18 +81,18 @@ $("form-leitura").addEventListener("submit", async (e) => {
   carregar();
 });
 
-// As leituras são acumuladas: cada uma tem que ficar entre a anterior e a próxima.
+// A leitura do carregador é acumulada: tem que ficar entre a anterior e a próxima.
 function validar(nova) {
   const outras = leituras.filter((l) => l.data_leitura !== nova.data_leitura);
   const ant = outras.filter((l) => l.data_leitura < nova.data_leitura).at(-1);
   const prox = outras.find((l) => l.data_leitura > nova.data_leitura);
-  const fmt = (l) => `${dataBr(l.data_leitura)}: ${num(Number(l.kwh_total), 0)} / ${num(Number(l.kwh_carro), 0)} kWh`;
+  const fmt = (l) => `${dataBr(l.data_leitura)}: ${num(Number(l.kwh_carro), 0)} kWh`;
 
-  if (ant && (nova.kwh_total < Number(ant.kwh_total) || nova.kwh_carro < Number(ant.kwh_carro)))
-    return `A leitura não pode ser menor que a anterior (${fmt(ant)}).`;
-  if (prox && (nova.kwh_total > Number(prox.kwh_total) || nova.kwh_carro > Number(prox.kwh_carro)))
-    return `A leitura não pode ser maior que a seguinte (${fmt(prox)}).`;
-  if (ant && nova.kwh_carro - Number(ant.kwh_carro) > nova.kwh_total - Number(ant.kwh_total))
+  if (ant && nova.kwh_carro < Number(ant.kwh_carro))
+    return `A leitura do carregador não pode ser menor que a anterior (${fmt(ant)}).`;
+  if (prox && nova.kwh_carro > Number(prox.kwh_carro))
+    return `A leitura do carregador não pode ser maior que a seguinte (${fmt(prox)}).`;
+  if (ant && nova.kwh_carro - Number(ant.kwh_carro) > nova.kwh_total)
     return "O consumo do carro no período ficou maior que o consumo total. Confira os números.";
   if (ant && nova.valor_total == null)
     return "Informe o valor da conta (só a primeira leitura pode ficar sem valor).";
@@ -220,10 +220,9 @@ function renderTabela() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${dataBr(l.data_leitura)}</td>
-      <td>${num(Number(l.kwh_total), 0)}</td>
+      <td>${l.base ? "—" : num(l.kwhTotal, 0)}</td>
       <td>${num(Number(l.kwh_carro), 0)}</td>
-      <td>${l.base ? "base" : num(l.kwhTotal, 0)}</td>
-      <td>${l.base ? "—" : num(l.kwhCarro, 0)}</td>
+      <td>${l.base ? "base" : num(l.kwhCarro, 0)}</td>
       <td>${l.base ? "—" : brl.format(l.valorTotal)}</td>
       <td>${l.base ? "—" : brl.format(l.custoCarro)}</td>
       <td>${l.dias ?? "—"}</td>

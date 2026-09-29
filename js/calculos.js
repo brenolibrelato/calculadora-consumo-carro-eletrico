@@ -9,10 +9,11 @@ function paraUtc(dataIso) {
 }
 
 /**
- * Recebe as leituras cruas do banco (kWh ACUMULADO do medidor e do carregador)
- * e devolve em ordem de data, com o consumo e os valores de cada período.
- * O período de uma leitura vai da leitura anterior até ela. A primeira
- * leitura é só o ponto de partida (base): não tem consumo nem médias.
+ * Recebe as leituras cruas do banco e devolve em ordem de data, com os valores
+ * de cada período. kwh_total é o consumo da casa informado na fatura;
+ * kwh_carro é a leitura ACUMULADA do carregador, então o consumo do carro é a
+ * diferença para a leitura anterior. A primeira leitura é só o ponto de
+ * partida (base) do carregador: não entra nos cálculos.
  */
 export function processar(leituras) {
   const ordenadas = [...leituras].sort(
@@ -23,7 +24,7 @@ export function processar(leituras) {
     const anterior = ordenadas[i - 1];
     const base = !anterior;
 
-    const kwhTotal = base ? 0 : Number(l.kwh_total) - Number(anterior.kwh_total);
+    const kwhTotal = base ? 0 : Number(l.kwh_total);
     const kwhCarro = base ? 0 : Number(l.kwh_carro) - Number(anterior.kwh_carro);
     const valorTotal = base ? 0 : Number(l.valor_total ?? 0);
 
@@ -81,9 +82,9 @@ export function resumo(meses) {
   };
 }
 
-/** CSV simples para backup (leituras acumuladas, como foram lançadas) (separador ; para abrir direto no Excel pt-BR). */
+/** CSV simples para backup (dados como foram lançados) (separador ; para abrir direto no Excel pt-BR). */
 export function paraCsv(leituras) {
-  const cab = "data_leitura;kwh_total_acumulado;kwh_carro_acumulado;valor_total";
+  const cab = "data_leitura;kwh_total;kwh_carro_acumulado;valor_total";
   const linhas = processar(leituras).map((l) =>
     [l.data_leitura, l.kwh_total, l.kwh_carro, l.valor_total ?? ""]
       .map((v) => String(v).replace(".", ","))

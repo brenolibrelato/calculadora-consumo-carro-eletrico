@@ -3,7 +3,7 @@
 create table if not exists public.leituras (
   id           bigint generated always as identity primary key,
   data_leitura date    not null unique,
-  kwh_total    numeric not null check (kwh_total >= 0),  -- leitura ACUMULADA do medidor
+  kwh_total    numeric not null check (kwh_total >= 0),  -- consumo da casa informado na fatura
   kwh_carro    numeric not null check (kwh_carro >= 0),  -- leitura ACUMULADA do carregador
   valor_total  numeric check (valor_total >= 0),         -- vazio só na 1ª leitura (base)
   created_at   timestamptz not null default now()
