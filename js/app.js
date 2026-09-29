@@ -31,14 +31,12 @@ async function atualizarSessao() {
 
 $("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const email = $("email").value.trim();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.href.split("#")[0] },
+  const { error } = await supabase.auth.signInWithPassword({
+    email: $("email").value.trim(),
+    password: $("senha").value,
   });
-  $("msg-login").textContent = error
-    ? `Erro: ${error.message}`
-    : "Link enviado! Abra o e-mail neste aparelho para entrar.";
+  $("msg-login").textContent = error ? "E-mail ou senha incorretos." : "";
+  if (!error) $("senha").value = "";
 });
 
 $("sair").addEventListener("click", async () => {

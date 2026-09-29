@@ -62,9 +62,10 @@
 
     <section id="area-login">
       <h2>Entrar para lançar leituras</h2>
-      <form id="form-login" class="linha">
-        <input id="email" type="email" placeholder="seu@email.com" required>
-        <button type="submit">Enviar link</button>
+      <form id="form-login">
+        <input id="email" type="email" placeholder="seu@email.com" autocomplete="username" required>
+        <input id="senha" type="password" placeholder="senha" autocomplete="current-password" required>
+        <button type="submit">Entrar</button>
       </form>
       <p id="msg-login" class="msg"></p>
     </section>
