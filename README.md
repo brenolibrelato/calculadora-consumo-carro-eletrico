@@ -2,7 +2,7 @@
 
 Site simples para registrar as leituras da conta de luz e separar quanto do consumo e do custo é do carro elétrico.
 
-**Você informa:** data da leitura, kWh total, kWh do carro (consumo do período) e valor total da conta.
+**Você informa:** data da leitura, leitura acumulada do medidor da casa e do carregador do carro (como aparece no marcador) e valor total da conta. O consumo de cada período é a diferença para a leitura anterior; a primeira leitura serve só de ponto de partida.
 
 **O site calcula:**
 - Tarifa efetiva (`valor ÷ kWh total`) e custo do carro (`kWh carro × tarifa`)

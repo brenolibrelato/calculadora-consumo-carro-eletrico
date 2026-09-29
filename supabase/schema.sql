@@ -3,11 +3,10 @@
 create table if not exists public.leituras (
   id           bigint generated always as identity primary key,
   data_leitura date    not null unique,
-  kwh_total    numeric not null check (kwh_total > 0),
-  kwh_carro    numeric not null check (kwh_carro >= 0),
-  valor_total  numeric not null check (valor_total >= 0),
-  created_at   timestamptz not null default now(),
-  constraint kwh_carro_menor_que_total check (kwh_carro <= kwh_total)
+  kwh_total    numeric not null check (kwh_total >= 0),  -- leitura ACUMULADA do medidor
+  kwh_carro    numeric not null check (kwh_carro >= 0),  -- leitura ACUMULADA do carregador
+  valor_total  numeric check (valor_total >= 0),         -- vazio só na 1ª leitura (base)
+  created_at   timestamptz not null default now()
 );
 
 alter table public.leituras enable row level security;

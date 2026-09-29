@@ -64,10 +64,11 @@ $("form-leitura").addEventListener("submit", async (e) => {
     data_leitura: $("data").value,
     kwh_total: Number($("kwh-total").value),
     kwh_carro: Number($("kwh-carro").value),
-    valor_total: Number($("valor").value),
+    valor_total: $("valor").value === "" ? null : Number($("valor").value),
   };
-  if (nova.kwh_carro > nova.kwh_total) {
-    $("msg-leitura").textContent = "O kWh do carro não pode ser maior que o total.";
+  const erro = validar(nova);
+  if (erro) {
+    $("msg-leitura").textContent = erro;
     return;
   }
   const { error } = await supabase.from("leituras").upsert(nova, { onConflict: "data_leitura" });
@@ -80,6 +81,24 @@ $("form-leitura").addEventListener("submit", async (e) => {
   carregar();
 });
 
+// As leituras são acumuladas: cada uma tem que ficar entre a anterior e a próxima.
+function validar(nova) {
+  const outras = leituras.filter((l) => l.data_leitura !== nova.data_leitura);
+  const ant = outras.filter((l) => l.data_leitura < nova.data_leitura).at(-1);
+  const prox = outras.find((l) => l.data_leitura > nova.data_leitura);
+  const fmt = (l) => `${dataBr(l.data_leitura)}: ${num(Number(l.kwh_total), 0)} / ${num(Number(l.kwh_carro), 0)} kWh`;
+
+  if (ant && (nova.kwh_total < Number(ant.kwh_total) || nova.kwh_carro < Number(ant.kwh_carro)))
+    return `A leitura não pode ser menor que a anterior (${fmt(ant)}).`;
+  if (prox && (nova.kwh_total > Number(prox.kwh_total) || nova.kwh_carro > Number(prox.kwh_carro)))
+    return `A leitura não pode ser maior que a seguinte (${fmt(prox)}).`;
+  if (ant && nova.kwh_carro - Number(ant.kwh_carro) > nova.kwh_total - Number(ant.kwh_total))
+    return "O consumo do carro no período ficou maior que o consumo total. Confira os números.";
+  if (ant && nova.valor_total == null)
+    return "Informe o valor da conta (só a primeira leitura pode ficar sem valor).";
+  return null;
+}
+
 async function apagar(id) {
   if (!confirm("Apagar esta leitura?")) return;
   const { error } = await supabase.from("leituras").delete().eq("id", id);
@@ -89,9 +108,9 @@ async function apagar(id) {
 
 function editar(l) {
   $("data").value = l.data_leitura;
-  $("kwh-total").value = l.kwhTotal;
-  $("kwh-carro").value = l.kwhCarro;
-  $("valor").value = l.valorTotal;
+  $("kwh-total").value = l.kwh_total;
+  $("kwh-carro").value = l.kwh_carro;
+  $("valor").value = l.valor_total ?? "";
   $("area-lancar").scrollIntoView({ behavior: "smooth" });
 }
 
@@ -126,7 +145,9 @@ function renderResumo() {
   const r = resumo(agruparPorMes(proc));
   const ultima = proc.at(-1);
   if (!r) {
-    $("resumo").innerHTML = "<p>Nenhuma leitura ainda.</p>";
+    $("resumo").innerHTML = leituras.length
+      ? "<p>Leitura inicial registrada. Lance a próxima para ver os cálculos.</p>"
+      : "<p>Nenhuma leitura ainda.</p>";
     return;
   }
   $("resumo").innerHTML = `
@@ -199,10 +220,12 @@ function renderTabela() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${dataBr(l.data_leitura)}</td>
-      <td>${num(l.kwhTotal, 0)}</td>
-      <td>${num(l.kwhCarro, 0)}</td>
-      <td>${brl.format(l.valorTotal)}</td>
-      <td>${brl.format(l.custoCarro)}</td>
+      <td>${num(Number(l.kwh_total), 0)}</td>
+      <td>${num(Number(l.kwh_carro), 0)}</td>
+      <td>${l.base ? "base" : num(l.kwhTotal, 0)}</td>
+      <td>${l.base ? "—" : num(l.kwhCarro, 0)}</td>
+      <td>${l.base ? "—" : brl.format(l.valorTotal)}</td>
+      <td>${l.base ? "—" : brl.format(l.custoCarro)}</td>
       <td>${l.dias ?? "—"}</td>
       <td>${num(l.mediaDiaTotal)} / ${num(l.mediaDiaCarro)}</td>
       <td class="acoes"></td>`;
