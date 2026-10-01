@@ -4,17 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Consumo do Carro Elétrico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
 </head>
 <body>
   <header>
-    <h1>⚡ Consumo do Carro Elétrico</h1>
+    <h1><span class="marca" aria-hidden="true"></span>Consumo do carro elétrico</h1>
     <p id="status">Carregando…</p>
   </header>
 
   <main>
-    <section id="resumo" class="cards dados" hidden></section>
+    <section id="resumo" class="resumo dados" hidden></section>
 
     <section class="dados" hidden>
       <div class="titulo-secao">
@@ -30,7 +33,7 @@
     <section id="area-lancar" hidden>
       <div class="titulo-secao">
         <h2>Lançar leitura</h2>
-        <span class="usuario"><span id="usuario"></span> · <button id="sair" class="link">sair</button></span>
+        <span class="usuario"><span id="usuario"></span><button id="sair" class="link">Sair</button></span>
       </div>
       <form id="form-leitura">
         <label>Data da leitura <input id="data" type="date" required></label>
@@ -75,9 +78,9 @@
 
     <section id="area-login" class="tela-login" hidden>
       <div class="login-card">
-        <div class="login-icone" aria-hidden="true">⚡</div>
-        <h2>Consumo do Carro Elétrico</h2>
-        <p class="login-sub">Entre para ver e lançar as leituras.</p>
+        <span class="marca grande" aria-hidden="true"></span>
+        <h2>Consumo do carro elétrico</h2>
+        <p class="login-sub">Entre para ver quanto da conta de luz é do carro.</p>
         <form id="form-login">
           <label>E-mail <input id="email" type="email" placeholder="seu@email.com" autocomplete="username" required></label>
           <label>Senha <input id="senha" type="password" autocomplete="current-password" required></label>

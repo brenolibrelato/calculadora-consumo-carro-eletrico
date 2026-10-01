@@ -249,28 +249,43 @@ function renderResumo() {
   const ultima = proc.at(-1);
   if (!r) {
     $("resumo").innerHTML = leituras.length
-      ? "<p>Leitura inicial registrada. Lance a próxima para ver os cálculos.</p>"
-      : "<p>Nenhuma leitura ainda.</p>";
+      ? '<p class="vazio">Leitura inicial registrada. Lance a próxima para ver quanto o carro custou.</p>'
+      : '<p class="vazio">Nenhuma leitura ainda. Lance a primeira em "Lançar leitura".</p>';
     return;
   }
-  $("resumo").innerHTML = `
-    <div class="card"><span>Última conta — carro</span><strong>${brl.format(ultima.custoCarro)}</strong>
-      <small>${num(ultima.percCarro * 100, 0)}% de ${brl.format(ultima.valorTotal)}</small></div>
-    <div class="card"><span>Média/dia (última)</span><strong>${num(ultima.mediaDiaTotal)} kWh</strong>
-      <small>carro: ${num(ultima.mediaDiaCarro)} kWh/dia</small></div>
-    <div class="card"><span>Média/mês total</span><strong>${num(r.mediaKwhTotal, 0)} kWh</strong>
-      <small>${brl.format(r.mediaValorTotal)}</small></div>
-    <div class="card"><span>Média/mês carro</span><strong>${num(r.mediaKwhCarro, 0)} kWh</strong>
-      <small>${brl.format(r.mediaCustoCarro)}</small></div>`;
-
+  // Destaque: a última conta dividida entre carro e casa.
+  const perc = Math.min(Math.max(ultima.percCarro * 100, 0), 100);
+  const dataLonga = new Date(paraData(ultima.data_leitura)).toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
   const g = compararGasolina(proc, gasolina);
-  if (g) {
-    $("resumo").innerHTML += `
-    <div class="card" title="Gasolina a ${brl.format(gasolina.precoLitro)}/L e ${num(gasolina.kmPorLitro)} km/L. Considera só a recarga em casa.">
-      <span>Economia vs gasolina</span><strong>${brl.format(g.economia)}</strong>
-      <small>${num(g.km, 0)} km · ${num(g.kwh100km)} kWh/100 km · ${brl.format(g.custoKm)}/km</small></div>`;
-  }
+  $("resumo").innerHTML = `
+    <p class="destaque-titulo">Na conta de ${dataLonga}, o carro custou</p>
+    <p class="destaque-valor">${brl.format(ultima.custoCarro)}</p>
+    <div class="divisao" role="img" aria-label="Carro ${num(perc, 0)}% da conta, casa ${num(100 - perc, 0)}%">
+      <span class="parte-carro"></span>
+    </div>
+    <div class="divisao-legenda">
+      <span><span class="ponto carro"></span><b>Carro</b> ${num(ultima.kwhCarro, 0)} kWh, ${num(perc, 0)}%</span>
+      <span><span class="ponto casa"></span><b>Casa</b> ${num(ultima.kwhTotal - ultima.kwhCarro, 0)} kWh, ${brl.format(ultima.custoSemCarro)}</span>
+      <span>Conta de ${brl.format(ultima.valorTotal)} em ${ultima.dias} dias</span>
+    </div>
+    <dl class="numeros">
+      <div><dt>Consumo por dia na última conta</dt><dd>${num(ultima.mediaDiaTotal)} kWh</dd>
+        <dd class="sub">${num(ultima.mediaDiaCarro)} kWh por dia do carro</dd></div>
+      <div><dt>Média por mês da casa toda</dt><dd>${num(r.mediaKwhTotal, 0)} kWh</dd>
+        <dd class="sub">${brl.format(r.mediaValorTotal)} por conta</dd></div>
+      <div><dt>Média por mês do carro</dt><dd>${num(r.mediaKwhCarro, 0)} kWh</dd>
+        <dd class="sub">${brl.format(r.mediaCustoCarro)} por conta</dd></div>
+      ${g ? `<div class="economia" title="Gasolina a ${brl.format(gasolina.precoLitro)}/L e ${num(gasolina.kmPorLitro)} km/L. Considera só a recarga em casa.">
+        <dt>Economia em relação à gasolina</dt><dd>${brl.format(g.economia)}</dd>
+        <dd class="sub">${num(g.km, 0)} km rodados, ${num(g.kwh100km)} kWh/100 km, ${brl.format(g.custoKm)} por km</dd></div>` : ""}
+    </dl>`;
+  // A barra cresce até a parte do carro uma vez, ao carregar.
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    $("resumo").querySelector(".parte-carro")?.style.setProperty("--parte", `${perc}%`)));
 }
+
+// "2026-09-17" -> data local ao meio-dia (evita cair no dia anterior por fuso)
+const paraData = (iso) => { const [a, m, d] = iso.split("-").map(Number); return new Date(a, m - 1, d, 12); };
 
 // Cores do tema atual (claro/escuro) lidas do CSS, para eixos, grade e legenda.
 const corCss = (nome) => getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
@@ -279,6 +294,8 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => rend
 function renderGrafico() {
   Chart.defaults.color = corCss("--suave");
   Chart.defaults.borderColor = corCss("--borda");
+  Chart.defaults.font.family = "Barlow, system-ui, sans-serif";
+  Chart.defaults.font.size = 13;
   const meses = agruparPorMes(processar(leituras));
   const r = resumo(meses);
   const porDia = visao === "dia";
@@ -292,13 +309,15 @@ function renderGrafico() {
     data: {
       labels: meses.map((m) => mesBr(m.mes)),
       datasets: [
-        { type: "bar", label: "Casa", data: casa, backgroundColor: "#3b82f6", stack: "consumo" },
-        { type: "bar", label: "Carro", data: carro, backgroundColor: "#10b981", stack: "consumo", borderRadius: 4 },
+        // carro embaixo (é o foco), casa por cima
+        { type: "bar", label: "Carro", data: carro, backgroundColor: corCss("--carro"), stack: "consumo" },
+        { type: "bar", label: "Casa", data: casa, backgroundColor: corCss("--casa"), stack: "consumo", borderRadius: 3 },
         {
           type: "line",
           label: "Média do total",
           data: meses.map(() => media),
-          borderColor: "#9ca3af",
+          borderColor: corCss("--tinta"),
+          borderWidth: 1.5,
           borderDash: [6, 4],
           pointRadius: 0,
           stack: "media",
