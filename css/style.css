@@ -88,6 +88,7 @@ input {
   font: inherit; padding: 8px 10px; border-radius: 8px;
   border: 1px solid var(--borda); background: var(--bg); color: var(--texto);
 }
+.botoes { display: flex; gap: 8px; }
 .msg { grid-column: 1 / -1; margin: 0; color: var(--suave); min-height: 1.2em; }
 .usuario { color: var(--suave); font-size: .85rem; }
 

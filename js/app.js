@@ -18,6 +18,7 @@ let leituras = [];
 let visao = "total"; // "total" | "carro"
 let grafico = null;
 let logado = false;
+let editandoId = null; // id da leitura em edição (null = nova leitura)
 
 // ---------- Autenticação ----------
 async function atualizarSessao() {
@@ -71,19 +72,30 @@ $("form-leitura").addEventListener("submit", async (e) => {
     $("msg-leitura").textContent = erro;
     return;
   }
-  const { error } = await supabase.from("leituras").upsert(nova, { onConflict: "data_leitura" });
+  // Em edição, atualiza pelo id: assim trocar a data não cria uma leitura nova.
+  const { error } = editandoId
+    ? await supabase.from("leituras").update(nova).eq("id", editandoId)
+    : await supabase.from("leituras").upsert(nova, { onConflict: "data_leitura" });
   if (error) {
     $("msg-leitura").textContent = `Erro ao salvar: ${error.message}`;
     return;
   }
+  sairDaEdicao();
   $("msg-leitura").textContent = "Leitura salva.";
-  e.target.reset();
   carregar();
+});
+
+$("cancelar-edicao").addEventListener("click", () => {
+  sairDaEdicao();
+  $("msg-leitura").textContent = "";
 });
 
 // A leitura do carregador é acumulada: tem que ficar entre a anterior e a próxima.
 function validar(nova) {
-  const outras = leituras.filter((l) => l.data_leitura !== nova.data_leitura);
+  if (editandoId && leituras.some((l) => l.id !== editandoId && l.data_leitura === nova.data_leitura))
+    return `Já existe uma leitura em ${dataBr(nova.data_leitura)}.`;
+
+  const outras = leituras.filter((l) => l.id !== editandoId && l.data_leitura !== nova.data_leitura);
   const ant = outras.filter((l) => l.data_leitura < nova.data_leitura).at(-1);
   const prox = outras.find((l) => l.data_leitura > nova.data_leitura);
   const fmt = (l) => `${dataBr(l.data_leitura)}: ${num(Number(l.kwh_carro), 0)} kWh`;
@@ -94,24 +106,46 @@ function validar(nova) {
     return `A leitura do carregador não pode ser maior que a seguinte (${fmt(prox)}).`;
   if (ant && nova.kwh_carro - Number(ant.kwh_carro) > nova.kwh_total)
     return "O consumo do carro no período ficou maior que o consumo total. Confira os números.";
+  if (prox && Number(prox.kwh_carro) - nova.kwh_carro > Number(prox.kwh_total))
+    return `Com esse valor, o consumo do carro no período seguinte (até ${dataBr(prox.data_leitura)}) ficaria maior que o consumo total dele.`;
   if (ant && nova.valor_total == null)
     return "Informe o valor da conta (só a primeira leitura pode ficar sem valor).";
   return null;
 }
 
-async function apagar(id) {
-  if (!confirm("Apagar esta leitura?")) return;
-  const { error } = await supabase.from("leituras").delete().eq("id", id);
+async function apagar(l) {
+  // A leitura mais antiga é a base do carregador: apagá-la faz a seguinte virar base
+  // e o período dela sair dos cálculos.
+  const seguinte = l.base ? leituras.find((x) => x.data_leitura > l.data_leitura) : null;
+  const pergunta = seguinte
+    ? `Esta é a leitura mais antiga (base do carregador).\n\n` +
+      `Se apagar, a leitura de ${dataBr(seguinte.data_leitura)} vira a base e o consumo e o custo ` +
+      `desse período saem dos cálculos.\n\nApagar mesmo assim?`
+    : `Apagar a leitura de ${dataBr(l.data_leitura)}?`;
+  if (!confirm(pergunta)) return;
+  const { error } = await supabase.from("leituras").delete().eq("id", l.id);
   if (error) alert(`Erro ao apagar: ${error.message}`);
+  if (l.id === editandoId) sairDaEdicao();
   carregar();
 }
 
 function editar(l) {
+  editandoId = l.id;
   $("data").value = l.data_leitura;
   $("kwh-total").value = l.kwh_total;
   $("kwh-carro").value = l.kwh_carro;
   $("valor").value = l.valor_total ?? "";
+  $("salvar").textContent = "Salvar alteração";
+  $("cancelar-edicao").hidden = false;
+  $("msg-leitura").textContent = `Editando a leitura de ${dataBr(l.data_leitura)}.`;
   $("area-lancar").scrollIntoView({ behavior: "smooth" });
+}
+
+function sairDaEdicao() {
+  editandoId = null;
+  $("form-leitura").reset();
+  $("salvar").textContent = "Salvar";
+  $("cancelar-edicao").hidden = true;
 }
 
 $("exportar").addEventListener("click", () => {
@@ -235,7 +269,7 @@ function renderTabela() {
       const bAp = document.createElement("button");
       bAp.textContent = "Apagar";
       bAp.className = "perigo";
-      bAp.onclick = () => apagar(l.id);
+      bAp.onclick = () => apagar(l);
       tr.querySelector(".acoes").append(bEd, bAp);
     }
     corpo.append(tr);
