@@ -26,6 +26,14 @@ Os dados ficam no [Supabase](https://supabase.com) (Postgres). Qualquer pessoa c
 O botão **Exportar CSV** baixa todas as leituras (separador `;`, abre direto no Excel).
 No plano gratuito, o Supabase pausa projetos parados há ~7 dias. Os dados **não são apagados**, basta reativar o projeto pelo painel.
 
+## Testes
+
+As funções de cálculo têm testes com o test runner nativo do Node (sem instalar nada):
+
+```
+node --test
+```
+
 ## Estrutura
 
 ```
@@ -34,5 +42,7 @@ css/style.css
 js/config.js      # URL e chave do Supabase
 js/calculos.js    # funções puras de cálculo
 js/app.js         # tela, formulário, gráfico, login
-supabase/schema.sql
+supabase/schema.sql       # tabela e RLS (instalação nova)
+supabase/002-odometro.sql # migração: coluna odometro
+tests/calculos.test.js
 ```
