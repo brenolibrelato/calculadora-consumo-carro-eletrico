@@ -48,6 +48,16 @@ h2 { font-size: 1.25rem; font-weight: 600; margin: 0; letter-spacing: -.005em; }
 h3 { font-size: 1rem; font-weight: 600; margin: 28px 0 12px; padding-top: 20px; border-top: 1px solid var(--borda); }
 #status { color: var(--suave); margin: 0; font-size: .875rem; }
 
+/* Abas */
+.abas { display: flex; gap: 4px; margin-left: auto; }
+.abas button {
+  background: none; border: none; border-radius: 0; color: var(--suave);
+  padding: 6px 10px; border-bottom: 2px solid transparent; font-weight: 500;
+}
+.abas button[aria-selected="true"] { color: var(--tinta); border-bottom-color: var(--carro); }
+.abas button:hover { filter: none; color: var(--tinta); }
+header { align-items: center; }
+
 /* Marca: uma barrinha dividida carro | casa */
 .marca { display: inline-flex; width: 28px; height: 8px; border-radius: 2px; overflow: hidden; flex: none; }
 .marca::before { content: ""; width: 62%; background: var(--carro); }

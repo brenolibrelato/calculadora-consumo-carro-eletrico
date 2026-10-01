@@ -28,8 +28,7 @@ function aplicarSessao(session) {
   logado = !!session;
   document.body.classList.toggle("deslogado", !logado); // esconde o cabeçalho na tela de login
   $("area-login").hidden = logado;
-  $("area-lancar").hidden = !logado;
-  document.querySelectorAll(".dados").forEach((el) => (el.hidden = !logado));
+  mostrarAba();
   $("usuario").textContent = logado ? session.user.email : "";
   if (logado) {
     $("status").textContent = "Carregando…";
@@ -196,6 +195,26 @@ async function apagar(l) {
   if (l.id === editandoId) sairDaEdicao();
   carregar();
 }
+
+// ---------- Abas: Resumo (destaque + gráfico) e Leituras (formulários + tabela) ----------
+// A aba fica no endereço (#leituras), então recarregar a página mantém onde você estava.
+const abaAtual = () => (location.hash === "#leituras" ? "leituras" : "resumo");
+
+function mostrarAba() {
+  const aba = abaAtual();
+  document.querySelector(".abas").hidden = !logado;
+  document.querySelectorAll("[data-aba-conteudo]").forEach((el) => (el.hidden = !logado || el.dataset.abaConteudo !== aba));
+  document.querySelectorAll(".abas [data-aba]").forEach((b) => b.setAttribute("aria-selected", b.dataset.aba === aba));
+  if (aba === "resumo") grafico?.resize(); // o gráfico estava escondido e precisa recalcular o tamanho
+}
+
+document.querySelectorAll(".abas [data-aba]").forEach((b) =>
+  b.addEventListener("click", () => {
+    history.replaceState(null, "", b.dataset.aba === "leituras" ? "#leituras" : location.pathname + location.search);
+    mostrarAba();
+  })
+);
+window.addEventListener("hashchange", mostrarAba);
 
 function editar(l) {
   editandoId = l.id;

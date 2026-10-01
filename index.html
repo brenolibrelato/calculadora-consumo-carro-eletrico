@@ -14,12 +14,16 @@
   <header>
     <h1><span class="marca" aria-hidden="true"></span>Consumo do carro elétrico</h1>
     <p id="status">Carregando…</p>
+    <nav class="abas" role="tablist" aria-label="Seções" hidden>
+      <button role="tab" data-aba="resumo" aria-selected="true">Resumo</button>
+      <button role="tab" data-aba="leituras" aria-selected="false">Leituras</button>
+    </nav>
   </header>
 
   <main>
-    <section id="resumo" class="resumo dados" hidden></section>
+    <section id="resumo" class="resumo" data-aba-conteudo="resumo" hidden></section>
 
-    <section class="dados" hidden>
+    <section data-aba-conteudo="resumo" hidden>
       <div class="titulo-secao">
         <h2>Consumo por mês</h2>
         <div class="alternar" role="group" aria-label="Visão do gráfico">
@@ -30,7 +34,7 @@
       <div class="grafico-box"><canvas id="grafico"></canvas></div>
     </section>
 
-    <section id="area-lancar" hidden>
+    <section id="area-lancar" data-aba-conteudo="leituras" hidden>
       <div class="titulo-secao">
         <h2>Lançar leitura</h2>
         <span class="usuario"><span id="usuario"></span><button id="sair" class="link">Sair</button></span>
@@ -57,7 +61,7 @@
       </form>
     </section>
 
-    <section class="dados" hidden>
+    <section data-aba-conteudo="leituras" hidden>
       <div class="titulo-secao">
         <h2>Leituras</h2>
         <button id="exportar" class="secundario">Exportar CSV</button>
