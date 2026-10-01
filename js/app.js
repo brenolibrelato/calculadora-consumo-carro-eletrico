@@ -18,6 +18,7 @@ let leituras = [];
 let visao = "mes"; // "mes" (kWh do mês) | "dia" (kWh/dia, compara ciclos de tamanhos diferentes)
 let grafico = null;
 let logado = false;
+let gasolina = { ...GASOLINA, atualizadoEm: null }; // vem da tabela configuracao
 let editandoId = null; // id da leitura em edição (null = nova leitura)
 
 // ---------- Autenticação ----------
@@ -53,15 +54,55 @@ supabase.auth.onAuthStateChange((_evento, session) => aplicarSessao(session));
 
 // ---------- Dados ----------
 async function carregar() {
-  const { data, error } = await supabase.from("leituras").select("*").order("data_leitura");
+  const [resLeituras, resConfig] = await Promise.all([
+    supabase.from("leituras").select("*").order("data_leitura"),
+    supabase.from("configuracao").select("*").eq("id", 1).maybeSingle(),
+  ]);
+  const { data, error } = resLeituras;
   if (error) {
     $("status").textContent = `Erro ao carregar: ${error.message}`;
     return;
   }
   $("status").textContent = "";
   leituras = data;
+  // Sem a tabela configuracao (ou sem a linha), segue com os padrões do config.js.
+  if (resConfig.error) console.warn("configuracao:", resConfig.error.message);
+  if (resConfig.data) {
+    gasolina = {
+      precoLitro: Number(resConfig.data.gasolina_preco_litro),
+      kmPorLitro: Number(resConfig.data.gasolina_km_por_litro),
+      atualizadoEm: resConfig.data.atualizado_em,
+    };
+  }
+  preencherGasolina();
   render();
 }
+
+function preencherGasolina() {
+  $("gas-preco").value = gasolina.precoLitro;
+  $("gas-km-l").value = gasolina.kmPorLitro;
+  $("msg-gasolina").textContent = gasolina.atualizadoEm
+    ? `Atualizado em ${new Date(gasolina.atualizadoEm).toLocaleDateString("pt-BR")}.`
+    : "";
+}
+
+$("form-gasolina").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const linha = {
+    id: 1,
+    gasolina_preco_litro: Number($("gas-preco").value),
+    gasolina_km_por_litro: Number($("gas-km-l").value),
+    atualizado_em: new Date().toISOString(),
+  };
+  $("salvar-gasolina").disabled = true;
+  const { error } = await supabase.from("configuracao").upsert(linha);
+  $("salvar-gasolina").disabled = false;
+  if (error) {
+    $("msg-gasolina").textContent = `Erro ao salvar: ${error.message}`;
+    return;
+  }
+  carregar();
+});
 
 $("form-leitura").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -210,10 +251,10 @@ function renderResumo() {
     <div class="card"><span>Média/mês carro</span><strong>${num(r.mediaKwhCarro, 0)} kWh</strong>
       <small>${brl.format(r.mediaCustoCarro)}</small></div>`;
 
-  const g = compararGasolina(proc, GASOLINA);
+  const g = compararGasolina(proc, gasolina);
   if (g) {
     $("resumo").innerHTML += `
-    <div class="card" title="Gasolina a ${brl.format(GASOLINA.precoLitro)}/L e ${num(GASOLINA.kmPorLitro)} km/L (js/config.js). Considera só a recarga em casa.">
+    <div class="card" title="Gasolina a ${brl.format(gasolina.precoLitro)}/L e ${num(gasolina.kmPorLitro)} km/L. Considera só a recarga em casa.">
       <span>Economia vs gasolina</span><strong>${brl.format(g.economia)}</strong>
       <small>${num(g.km, 0)} km · ${num(g.kwh100km)} kWh/100 km · ${brl.format(g.custoKm)}/km</small></div>`;
   }

@@ -7,7 +7,7 @@ Site simples para registrar as leituras da conta de luz e separar quanto do cons
 **O site calcula:**
 - Tarifa efetiva (`valor ÷ kWh total`) e custo do carro (`kWh carro × tarifa`)
 - Consumo médio por dia (entre uma leitura e a anterior)
-- Com o odômetro: km rodados, kWh/100 km, R$/km e a economia em relação a um carro a gasolina (preço do litro e km/L em `js/config.js`). Considera só a recarga feita em casa.
+- Com o odômetro: km rodados, kWh/100 km, R$/km e a economia em relação a um carro a gasolina (preço do litro e km/L editáveis no site, na área logada). Considera só a recarga feita em casa.
 - Consumo por mês em barras empilhadas (casa + carro), comparado com a média, com a opção de ver em **kWh/mês** ou **kWh/dia** (a visão por dia compara meses com ciclos de leitura de tamanhos diferentes)
 
 Os dados ficam no [Supabase](https://supabase.com) (Postgres). Qualquer pessoa com o link vê os dados, e só os e-mails autorizados podem lançar, editar ou apagar leituras.
@@ -44,5 +44,6 @@ js/calculos.js    # funções puras de cálculo
 js/app.js         # tela, formulário, gráfico, login
 supabase/schema.sql       # tabela e RLS (instalação nova)
 supabase/002-odometro.sql # migração: coluna odometro
+supabase/003-configuracao.sql # migração: tabela configuracao (gasolina)
 tests/calculos.test.js
 ```

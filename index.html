@@ -44,6 +44,14 @@
         </div>
         <p id="msg-leitura" class="msg"></p>
       </form>
+
+      <h3>Comparação com gasolina</h3>
+      <form id="form-gasolina">
+        <label>Preço da gasolina (R$/L) <input id="gas-preco" type="number" step="0.01" min="0.01" inputmode="decimal" required></label>
+        <label>Consumo do carro a gasolina (km/L) <input id="gas-km-l" type="number" step="0.1" min="0.1" inputmode="decimal" required></label>
+        <div class="botoes"><button type="submit" id="salvar-gasolina">Salvar</button></div>
+        <p id="msg-gasolina" class="msg"></p>
+      </form>
     </section>
 
     <section>

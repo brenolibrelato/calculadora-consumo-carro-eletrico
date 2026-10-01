@@ -4,8 +4,8 @@
 export const SUPABASE_URL = "https://uhrmxtzosytnnkwbtzfv.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_jx5elv4lxPYFG6tr2bQiqg_9BkMpRW5";
 
-// Comparação com um carro a gasolina (card "Economia vs gasolina").
-// Ajuste para o preço atual e o consumo do carro que você usaria no lugar.
+// Valores padrão da comparação com gasolina. Os valores usados de verdade ficam
+// na tabela configuracao do Supabase e são editados pelo site (área logada).
 export const GASOLINA = {
   precoLitro: 6.3, // R$ por litro
   kmPorLitro: 11,  // consumo médio do carro a gasolina
