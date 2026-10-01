@@ -29,7 +29,7 @@ body {
   color: var(--texto);
 }
 
-header, main { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+header, main { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
 header { padding-top: 20px; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 h2 { font-size: 1.1rem; margin: 0; }
