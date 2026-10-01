@@ -1,6 +1,6 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
-import { processar, agruparPorMes, resumo, paraCsv } from "./calculos.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, GASOLINA } from "./config.js";
+import { processar, agruparPorMes, resumo, paraCsv, compararGasolina } from "./calculos.js";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -70,6 +70,7 @@ $("form-leitura").addEventListener("submit", async (e) => {
     kwh_total: Number($("kwh-total").value),
     kwh_carro: Number($("kwh-carro").value),
     valor_total: $("valor").value === "" ? null : Number($("valor").value),
+    odometro: $("odometro").value === "" ? null : Number($("odometro").value),
   };
   const erro = validar(nova);
   if (erro) {
@@ -114,6 +115,14 @@ function validar(nova) {
     return "O consumo do carro no período ficou maior que o consumo total. Confira os números.";
   if (prox && Number(prox.kwh_carro) - nova.kwh_carro > Number(prox.kwh_total))
     return `Com esse valor, o consumo do carro no período seguinte (até ${dataBr(prox.data_leitura)}) ficaria maior que o consumo total dele.`;
+  if (nova.odometro != null) {
+    const antOdo = outras.filter((l) => l.data_leitura < nova.data_leitura && l.odometro != null).at(-1);
+    const proxOdo = outras.find((l) => l.data_leitura > nova.data_leitura && l.odometro != null);
+    if (antOdo && nova.odometro < Number(antOdo.odometro))
+      return `O odômetro não pode ser menor que o anterior (${dataBr(antOdo.data_leitura)}: ${num(Number(antOdo.odometro), 0)} km).`;
+    if (proxOdo && nova.odometro > Number(proxOdo.odometro))
+      return `O odômetro não pode ser maior que o seguinte (${dataBr(proxOdo.data_leitura)}: ${num(Number(proxOdo.odometro), 0)} km).`;
+  }
   if (ant && nova.valor_total == null)
     return "Informe o valor da conta (só a primeira leitura pode ficar sem valor).";
   return null;
@@ -141,6 +150,7 @@ function editar(l) {
   $("kwh-total").value = l.kwh_total;
   $("kwh-carro").value = l.kwh_carro;
   $("valor").value = l.valor_total ?? "";
+  $("odometro").value = l.odometro ?? "";
   $("salvar").textContent = "Salvar alteração";
   $("cancelar-edicao").hidden = false;
   $("msg-leitura").textContent = `Editando a leitura de ${dataBr(l.data_leitura)}.`;
@@ -199,6 +209,14 @@ function renderResumo() {
       <small>${brl.format(r.mediaValorTotal)}</small></div>
     <div class="card"><span>Média/mês carro</span><strong>${num(r.mediaKwhCarro, 0)} kWh</strong>
       <small>${brl.format(r.mediaCustoCarro)}</small></div>`;
+
+  const g = compararGasolina(proc, GASOLINA);
+  if (g) {
+    $("resumo").innerHTML += `
+    <div class="card" title="Gasolina a ${brl.format(GASOLINA.precoLitro)}/L e ${num(GASOLINA.kmPorLitro)} km/L (js/config.js). Considera só a recarga em casa.">
+      <span>Economia vs gasolina</span><strong>${brl.format(g.economia)}</strong>
+      <small>${num(g.km, 0)} km · ${num(g.kwh100km)} kWh/100 km · ${brl.format(g.custoKm)}/km</small></div>`;
+  }
 }
 
 // Cores do tema atual (claro/escuro) lidas do CSS, para eixos, grade e legenda.
@@ -281,6 +299,9 @@ function renderTabela() {
       <td>${l.base ? "—" : brl.format(l.custoCarro)}</td>
       <td>${l.dias ?? "—"}</td>
       <td>${num(l.mediaDiaTotal)} / ${num(l.mediaDiaCarro)}</td>
+      <td>${l.odometro == null ? "—" : num(Number(l.odometro), 0)}</td>
+      <td>${num(l.km, 0)}</td>
+      <td>${num(l.kwh100km)}</td>
       <td class="acoes"></td>`;
     if (logado) {
       const bEd = document.createElement("button");

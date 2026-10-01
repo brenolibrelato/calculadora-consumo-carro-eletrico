@@ -2,11 +2,12 @@
 
 Site simples para registrar as leituras da conta de luz e separar quanto do consumo e do custo é do carro elétrico.
 
-**Você informa:** data da leitura, kWh total da fatura, leitura acumulada do carregador do carro (como aparece no marcador) e valor total da conta. O consumo do carro em cada período é a diferença para a leitura anterior do carregador; a primeira leitura serve só de ponto de partida.
+**Você informa:** data da leitura, kWh total da fatura, leitura acumulada do carregador do carro (como aparece no marcador), valor total da conta e, se quiser, o odômetro do carro. O consumo do carro em cada período é a diferença para a leitura anterior do carregador; a primeira leitura serve só de ponto de partida.
 
 **O site calcula:**
 - Tarifa efetiva (`valor ÷ kWh total`) e custo do carro (`kWh carro × tarifa`)
 - Consumo médio por dia (entre uma leitura e a anterior)
+- Com o odômetro: km rodados, kWh/100 km, R$/km e a economia em relação a um carro a gasolina (preço do litro e km/L em `js/config.js`). Considera só a recarga feita em casa.
 - Consumo por mês em barras empilhadas (casa + carro), comparado com a média, com a opção de ver em **kWh/mês** ou **kWh/dia** (a visão por dia compara meses com ciclos de leitura de tamanhos diferentes)
 
 Os dados ficam no [Supabase](https://supabase.com) (Postgres). Qualquer pessoa com o link vê os dados, e só os e-mails autorizados podem lançar, editar ou apagar leituras.

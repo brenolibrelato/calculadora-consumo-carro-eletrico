@@ -35,6 +35,11 @@ export function processar(leituras) {
       ? null
       : Math.round((paraUtc(l.data_leitura) - paraUtc(anterior.data_leitura)) / DIA_MS);
 
+    // Odômetro é opcional: só dá para calcular km se esta leitura e a anterior tiverem.
+    const km = !base && l.odometro != null && anterior.odometro != null
+      ? Number(l.odometro) - Number(anterior.odometro)
+      : null;
+
     return {
       base,
       ...l,
@@ -48,6 +53,9 @@ export function processar(leituras) {
       dias,
       mediaDiaTotal: dias ? kwhTotal / dias : null,
       mediaDiaCarro: dias ? kwhCarro / dias : null,
+      km,
+      kwh100km: km > 0 ? (kwhCarro / km) * 100 : null,
+      custoKm: km > 0 ? custoCarro / km : null,
     };
   });
 }
@@ -98,11 +106,32 @@ export function resumo(meses) {
   };
 }
 
+/**
+ * Compara o custo do carro elétrico com o de um carro a gasolina, somando só os
+ * períodos com km (odômetro nas duas pontas). Devolve null se não houver nenhum.
+ */
+export function compararGasolina(processadas, { precoLitro, kmPorLitro }) {
+  const comKm = processadas.filter((p) => p.km > 0);
+  if (comKm.length === 0) return null;
+  const km = comKm.reduce((s, p) => s + p.km, 0);
+  const kwh = comKm.reduce((s, p) => s + p.kwhCarro, 0);
+  const custoEletrico = comKm.reduce((s, p) => s + p.custoCarro, 0);
+  const custoGasolina = (km / kmPorLitro) * precoLitro;
+  return {
+    km,
+    kwh100km: (kwh / km) * 100,
+    custoKm: custoEletrico / km,
+    custoEletrico,
+    custoGasolina,
+    economia: custoGasolina - custoEletrico,
+  };
+}
+
 /** CSV simples para backup (dados como foram lançados) (separador ; para abrir direto no Excel pt-BR). */
 export function paraCsv(leituras) {
-  const cab = "data_leitura;kwh_total;kwh_carro_acumulado;valor_total";
+  const cab = "data_leitura;kwh_total;kwh_carro_acumulado;valor_total;odometro";
   const linhas = processar(leituras).map((l) =>
-    [l.data_leitura, l.kwh_total, l.kwh_carro, l.valor_total ?? ""]
+    [l.data_leitura, l.kwh_total, l.kwh_carro, l.valor_total ?? "", l.odometro ?? ""]
       .map((v) => String(v).replace(".", ","))
       .join(";")
   );

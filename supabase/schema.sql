@@ -6,6 +6,7 @@ create table if not exists public.leituras (
   kwh_total    numeric not null check (kwh_total >= 0),  -- consumo da casa informado na fatura
   kwh_carro    numeric not null check (kwh_carro >= 0),  -- leitura ACUMULADA do carregador
   valor_total  numeric check (valor_total >= 0),         -- vazio só na 1ª leitura (base)
+  odometro     numeric check (odometro >= 0),            -- km ACUMULADO do carro (opcional)
   created_at   timestamptz not null default now()
 );
 
