@@ -73,14 +73,18 @@
       </div>
     </section>
 
-    <section id="area-login" hidden>
-      <h2>Entrar para ver os dados</h2>
-      <form id="form-login">
-        <input id="email" type="email" placeholder="seu@email.com" autocomplete="username" required>
-        <input id="senha" type="password" placeholder="senha" autocomplete="current-password" required>
-        <button type="submit">Entrar</button>
-      </form>
-      <p id="msg-login" class="msg"></p>
+    <section id="area-login" class="tela-login" hidden>
+      <div class="login-card">
+        <div class="login-icone" aria-hidden="true">⚡</div>
+        <h2>Consumo do Carro Elétrico</h2>
+        <p class="login-sub">Entre para ver e lançar as leituras.</p>
+        <form id="form-login">
+          <label>E-mail <input id="email" type="email" placeholder="seu@email.com" autocomplete="username" required></label>
+          <label>Senha <input id="senha" type="password" autocomplete="current-password" required></label>
+          <button type="submit">Entrar</button>
+          <p id="msg-login" class="msg"></p>
+        </form>
+      </div>
     </section>
   </main>
 

@@ -26,6 +26,7 @@ let editandoId = null; // id da leitura em edição (null = nova leitura)
 // RLS no Supabase: sem login, a consulta volta vazia.
 function aplicarSessao(session) {
   logado = !!session;
+  document.body.classList.toggle("deslogado", !logado); // esconde o cabeçalho na tela de login
   $("area-login").hidden = logado;
   $("area-lancar").hidden = !logado;
   document.querySelectorAll(".dados").forEach((el) => (el.hidden = !logado));
