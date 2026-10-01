@@ -22,12 +22,23 @@ let gasolina = { ...GASOLINA, atualizadoEm: null }; // vem da tabela configuraca
 let editandoId = null; // id da leitura em edição (null = nova leitura)
 
 // ---------- Autenticação ----------
+// Os dados só aparecem (e só são buscados) com login. Quem protege de verdade é o
+// RLS no Supabase: sem login, a consulta volta vazia.
 function aplicarSessao(session) {
   logado = !!session;
   $("area-login").hidden = logado;
   $("area-lancar").hidden = !logado;
+  document.querySelectorAll(".dados").forEach((el) => (el.hidden = !logado));
   $("usuario").textContent = logado ? session.user.email : "";
-  renderTabela();
+  if (logado) {
+    $("status").textContent = "Carregando…";
+    setTimeout(carregar, 0); // fora do callback de auth, como recomenda o supabase-js
+  } else {
+    leituras = [];
+    sairDaEdicao();
+    $("status").textContent = "";
+    render(); // limpa cards, gráfico e tabela da página
+  }
 }
 
 $("form-login").addEventListener("submit", async (e) => {
@@ -357,5 +368,3 @@ function renderTabela() {
     corpo.append(tr);
   }
 }
-
-carregar();

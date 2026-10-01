@@ -12,12 +12,8 @@ create table if not exists public.leituras (
 
 alter table public.leituras enable row level security;
 
--- Qualquer pessoa com o link pode VER os dados
-create policy "leitura publica"
-  on public.leituras for select
-  using (true);
-
--- Só e-mails autorizados podem inserir/editar/apagar.
+-- Só e-mails autorizados podem ver, inserir, editar e apagar (for all inclui o SELECT).
+-- Sem login, nada aparece.
 -- Troque pelos e-mails de quem pode lançar leituras.
 create policy "escrita autorizada"
   on public.leituras for all

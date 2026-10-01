@@ -14,9 +14,9 @@
   </header>
 
   <main>
-    <section id="resumo" class="cards"></section>
+    <section id="resumo" class="cards dados" hidden></section>
 
-    <section>
+    <section class="dados" hidden>
       <div class="titulo-secao">
         <h2>Consumo por mês</h2>
         <div class="alternar" role="group" aria-label="Visão do gráfico">
@@ -54,7 +54,7 @@
       </form>
     </section>
 
-    <section>
+    <section class="dados" hidden>
       <div class="titulo-secao">
         <h2>Leituras</h2>
         <button id="exportar" class="secundario">Exportar CSV</button>
@@ -73,8 +73,8 @@
       </div>
     </section>
 
-    <section id="area-login">
-      <h2>Entrar para lançar leituras</h2>
+    <section id="area-login" hidden>
+      <h2>Entrar para ver os dados</h2>
       <form id="form-login">
         <input id="email" type="email" placeholder="seu@email.com" autocomplete="username" required>
         <input id="senha" type="password" placeholder="senha" autocomplete="current-password" required>

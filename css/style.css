@@ -21,6 +21,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* vale também para .cards e .botoes, que têm display próprio */
 
 body {
   margin: 0;

@@ -10,7 +10,7 @@ Site simples para registrar as leituras da conta de luz e separar quanto do cons
 - Com o odômetro: km rodados, kWh/100 km, R$/km e a economia em relação a um carro a gasolina (preço do litro e km/L editáveis no site, na área logada). Considera só a recarga feita em casa.
 - Consumo por mês em barras empilhadas (casa + carro), comparado com a média, com a opção de ver em **kWh/mês** ou **kWh/dia** (a visão por dia compara meses com ciclos de leitura de tamanhos diferentes)
 
-Os dados ficam no [Supabase](https://supabase.com) (Postgres). Qualquer pessoa com o link vê os dados, e só os e-mails autorizados podem lançar, editar ou apagar leituras.
+Os dados ficam no [Supabase](https://supabase.com) (Postgres). Os dados só aparecem depois do login, e só para os e-mails autorizados, que também são os únicos que podem lançar, editar ou apagar leituras.
 
 > O custo do carro é proporcional ao consumo, então inclui uma parte das taxas fixas da conta (iluminação pública, disponibilidade etc.).
 
@@ -45,5 +45,6 @@ js/app.js         # tela, formulário, gráfico, login
 supabase/schema.sql       # tabela e RLS (instalação nova)
 supabase/002-odometro.sql # migração: coluna odometro
 supabase/003-configuracao.sql # migração: tabela configuracao (gasolina)
+supabase/004-leitura-so-logado.sql # migração: remove a leitura pública
 tests/calculos.test.js
 ```
