@@ -7,7 +7,7 @@ Site simples para registrar as leituras da conta de luz e separar quanto do cons
 **O site calcula:**
 - Tarifa efetiva (`valor ÷ kWh total`) e custo do carro (`kWh carro × tarifa`)
 - Consumo médio por dia (entre uma leitura e a anterior)
-- Consumo por mês, comparado com a média, com a opção de alternar entre **Total** e **Carro**
+- Consumo por mês em barras empilhadas (casa + carro), comparado com a média, com a opção de ver em **kWh/mês** ou **kWh/dia** (a visão por dia compara meses com ciclos de leitura de tamanhos diferentes)
 
 Os dados ficam no [Supabase](https://supabase.com) (Postgres). Qualquer pessoa com o link vê os dados, e só os e-mails autorizados podem lançar, editar ou apagar leituras.
 

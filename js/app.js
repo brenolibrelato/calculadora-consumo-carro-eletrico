@@ -15,7 +15,7 @@ const mesBr = (mes) => {
 };
 
 let leituras = [];
-let visao = "total"; // "total" | "carro"
+let visao = "mes"; // "mes" (kWh do mês) | "dia" (kWh/dia, compara ciclos de tamanhos diferentes)
 let grafico = null;
 let logado = false;
 let editandoId = null; // id da leitura em edição (null = nova leitura)
@@ -210,47 +210,55 @@ function renderGrafico() {
   Chart.defaults.borderColor = corCss("--borda");
   const meses = agruparPorMes(processar(leituras));
   const r = resumo(meses);
-  const campo = visao === "total" ? "kwhTotal" : "kwhCarro";
-  const media = r ? (visao === "total" ? r.mediaKwhTotal : r.mediaKwhCarro) : 0;
-  const cor = visao === "total" ? "#3b82f6" : "#10b981";
+  const porDia = visao === "dia";
+  const unidade = porDia ? "kWh/dia" : "kWh";
+  // Barras empilhadas: casa + carro = total da fatura
+  const casa = meses.map((m) => (porDia ? m.mediaDiaTotal - m.mediaDiaCarro : m.kwhCasa));
+  const carro = meses.map((m) => (porDia ? m.mediaDiaCarro : m.kwhCarro));
+  const media = r ? (porDia ? r.mediaDiaTotal : r.mediaKwhTotal) : 0;
 
   const config = {
     data: {
       labels: meses.map((m) => mesBr(m.mes)),
       datasets: [
-        {
-          type: "bar",
-          label: visao === "total" ? "kWh total" : "kWh carro",
-          data: meses.map((m) => m[campo]),
-          backgroundColor: cor,
-          borderRadius: 4,
-        },
+        { type: "bar", label: "Casa", data: casa, backgroundColor: "#3b82f6", stack: "consumo" },
+        { type: "bar", label: "Carro", data: carro, backgroundColor: "#10b981", stack: "consumo", borderRadius: 4 },
         {
           type: "line",
-          label: "Média",
+          label: "Média do total",
           data: meses.map(() => media),
           borderColor: "#9ca3af",
           borderDash: [6, 4],
           pointRadius: 0,
+          stack: "media",
         },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
       plugins: {
         tooltip: {
           callbacks: {
-            afterBody: (itens) => {
+            label: (ctx) => `${ctx.dataset.label}: ${num(ctx.parsed.y)} ${unidade}`,
+            footer: (itens) => {
               const m = meses[itens[0].dataIndex];
-              return visao === "total"
-                ? `Conta: ${brl.format(m.valorTotal)}`
-                : `Custo carro: ${brl.format(m.custoCarro)}`;
+              const total = porDia ? m.mediaDiaTotal : m.kwhTotal;
+              const perc = m.kwhTotal ? (m.kwhCarro / m.kwhTotal) * 100 : 0;
+              return [
+                `Total: ${num(total)} ${unidade} (${m.dias} dias)`,
+                `Conta: ${brl.format(m.valorTotal)}`,
+                `Carro: ${brl.format(m.custoCarro)} (${num(perc, 0)}%)`,
+              ];
             },
           },
         },
       },
-      scales: { y: { beginAtZero: true, title: { display: true, text: "kWh" } } },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true, title: { display: true, text: unidade } },
+      },
     },
   };
 

@@ -52,20 +52,32 @@ export function processar(leituras) {
   });
 }
 
-/** Agrupa por mês da leitura ("2026-09"). Várias leituras no mesmo mês são somadas. */
+/**
+ * Agrupa por mês da leitura ("2026-09"). Várias leituras no mesmo mês são somadas.
+ * kwhCasa = consumo sem o carro. mediaDia* = kWh ÷ dias do(s) período(s), para
+ * comparar meses com ciclos de tamanhos diferentes (28 a 33 dias).
+ */
 export function agruparPorMes(processadas) {
   const mapa = new Map();
   for (const p of processadas) {
     if (p.base) continue;
     const mes = p.data_leitura.slice(0, 7);
-    const m = mapa.get(mes) ?? { mes, kwhTotal: 0, kwhCarro: 0, valorTotal: 0, custoCarro: 0 };
+    const m = mapa.get(mes) ?? { mes, kwhTotal: 0, kwhCarro: 0, valorTotal: 0, custoCarro: 0, dias: 0 };
     m.kwhTotal += p.kwhTotal;
     m.kwhCarro += p.kwhCarro;
     m.valorTotal += p.valorTotal;
     m.custoCarro += p.custoCarro;
+    m.dias += p.dias;
     mapa.set(mes, m);
   }
-  return [...mapa.values()].sort((a, b) => a.mes.localeCompare(b.mes));
+  return [...mapa.values()]
+    .map((m) => ({
+      ...m,
+      kwhCasa: m.kwhTotal - m.kwhCarro,
+      mediaDiaTotal: m.dias ? m.kwhTotal / m.dias : 0,
+      mediaDiaCarro: m.dias ? m.kwhCarro / m.dias : 0,
+    }))
+    .sort((a, b) => a.mes.localeCompare(b.mes));
 }
 
 /** Médias mensais gerais, para comparar cada mês com a média. */
@@ -73,12 +85,16 @@ export function resumo(meses) {
   const n = meses.length;
   if (n === 0) return null;
   const soma = (campo) => meses.reduce((s, m) => s + m[campo], 0);
+  const dias = soma("dias");
   return {
     meses: n,
     mediaKwhTotal: soma("kwhTotal") / n,
     mediaKwhCarro: soma("kwhCarro") / n,
     mediaValorTotal: soma("valorTotal") / n,
     mediaCustoCarro: soma("custoCarro") / n,
+    // média por dia ponderada pelos dias (não é a média das médias)
+    mediaDiaTotal: dias ? soma("kwhTotal") / dias : 0,
+    mediaDiaCarro: dias ? soma("kwhCarro") / dias : 0,
   };
 }
 
