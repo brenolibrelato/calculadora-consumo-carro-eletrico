@@ -24,7 +24,7 @@ Os dados ficam no [Supabase](https://supabase.com) (Postgres). Os dados só apar
 ## Backup
 
 O botão **Exportar CSV** baixa todas as leituras (separador `;`, abre direto no Excel).
-No plano gratuito, o Supabase pausa projetos parados há ~7 dias. Os dados **não são apagados**, basta reativar o projeto pelo painel.
+No plano gratuito, o Supabase pausa projetos parados há ~7 dias. Para evitar isso, o workflow `.github/workflows/manter-supabase-ativo.yml` consulta a API a cada 3 dias (sem login, não lê nem altera dados) e falha, com aviso por e-mail do GitHub, se o projeto não responder. Se mesmo assim pausar, os dados **não são apagados**: basta reativar o projeto pelo painel.
 
 ## Testes
 
