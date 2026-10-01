@@ -71,6 +71,7 @@ button {
   border: 1px solid var(--primaria); background: var(--primaria); color: #fff;
   border-radius: 8px; padding: 8px 14px;
 }
+button:disabled { opacity: .6; cursor: wait; }
 button.secundario, .alternar button, .acoes button {
   background: transparent; color: var(--primaria);
 }

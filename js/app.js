@@ -1,4 +1,4 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 import { processar, agruparPorMes, resumo, paraCsv } from "./calculos.js";
 
@@ -21,31 +21,35 @@ let logado = false;
 let editandoId = null; // id da leitura em edição (null = nova leitura)
 
 // ---------- Autenticação ----------
-async function atualizarSessao() {
-  const { data } = await supabase.auth.getSession();
-  logado = !!data.session;
+function aplicarSessao(session) {
+  logado = !!session;
   $("area-login").hidden = logado;
   $("area-lancar").hidden = !logado;
-  $("usuario").textContent = logado ? data.session.user.email : "";
+  $("usuario").textContent = logado ? session.user.email : "";
   renderTabela();
 }
 
 $("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
+  const botao = e.submitter;
+  botao.disabled = true;
   const { error } = await supabase.auth.signInWithPassword({
     email: $("email").value.trim(),
     password: $("senha").value,
   });
-  $("msg-login").textContent = error ? "E-mail ou senha incorretos." : "";
+  botao.disabled = false;
+  $("msg-login").textContent = !error
+    ? ""
+    : error.code === "invalid_credentials"
+      ? "E-mail ou senha incorretos."
+      : `Não foi possível entrar agora (${error.message}). Verifique a conexão e tente de novo.`;
   if (!error) $("senha").value = "";
 });
 
-$("sair").addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  atualizarSessao();
-});
+$("sair").addEventListener("click", () => supabase.auth.signOut());
 
-supabase.auth.onAuthStateChange(() => atualizarSessao());
+// Dispara já no carregamento (INITIAL_SESSION) e a cada login/logout.
+supabase.auth.onAuthStateChange((_evento, session) => aplicarSessao(session));
 
 // ---------- Dados ----------
 async function carregar() {
@@ -73,9 +77,11 @@ $("form-leitura").addEventListener("submit", async (e) => {
     return;
   }
   // Em edição, atualiza pelo id: assim trocar a data não cria uma leitura nova.
+  $("salvar").disabled = true;
   const { error } = editandoId
     ? await supabase.from("leituras").update(nova).eq("id", editandoId)
     : await supabase.from("leituras").upsert(nova, { onConflict: "data_leitura" });
+  $("salvar").disabled = false;
   if (error) {
     $("msg-leitura").textContent = `Erro ao salvar: ${error.message}`;
     return;
@@ -195,7 +201,13 @@ function renderResumo() {
       <small>${brl.format(r.mediaCustoCarro)}</small></div>`;
 }
 
+// Cores do tema atual (claro/escuro) lidas do CSS, para eixos, grade e legenda.
+const corCss = (nome) => getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => renderGrafico());
+
 function renderGrafico() {
+  Chart.defaults.color = corCss("--suave");
+  Chart.defaults.borderColor = corCss("--borda");
   const meses = agruparPorMes(processar(leituras));
   const r = resumo(meses);
   const campo = visao === "total" ? "kwhTotal" : "kwhCarro";
@@ -276,5 +288,4 @@ function renderTabela() {
   }
 }
 
-atualizarSessao();
 carregar();
